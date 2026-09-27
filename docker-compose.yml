@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cloudflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudflow}
+      POSTGRES_DB: cloudflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudflow -d cloudflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://cloudflow:${POSTGRES_PASSWORD:-cloudflow}@db:5432/cloudflow
+      AWS_SHARED_CREDENTIALS_FILE: /aws/credentials
+      AWS_CONFIG_FILE: /aws/config
+      AWS_EC2_METADATA_DISABLED: "true"
+    volumes:
+      - ${USERPROFILE}/.aws:/aws:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://cloudflow:${POSTGRES_PASSWORD:-cloudflow}@db:5432/cloudflow
+      AWS_SHARED_CREDENTIALS_FILE: /aws/credentials
+      AWS_CONFIG_FILE: /aws/config
+      AWS_EC2_METADATA_DISABLED: "true"
+    volumes:
+      - ${USERPROFILE}/.aws:/aws:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+

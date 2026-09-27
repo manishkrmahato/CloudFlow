@@ -1,0 +1,35 @@
+services:
+  api:
+    environment:
+      AWS_PROFILE: ""
+      AWS_EC2_METADATA_DISABLED: "false"
+    volumes: []
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-south-1
+        awslogs-group: /cloudflow/api
+        awslogs-create-group: "true"
+        awslogs-stream: api
+
+  worker:
+    environment:
+      AWS_PROFILE: ""
+      AWS_EC2_METADATA_DISABLED: "false"
+    volumes: []
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-south-1
+        awslogs-group: /cloudflow/worker
+        awslogs-create-group: "true"
+        awslogs-stream: worker
+
+  frontend:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-south-1
+        awslogs-group: /cloudflow/frontend
+        awslogs-create-group: "true"
+        awslogs-stream: frontend

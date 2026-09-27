@@ -1,0 +1,35 @@
+{
+  "Version":"2012-10-17",
+  "Statement":[
+    {
+      "Sid":"BucketObjects",
+      "Effect":"Allow",
+      "Action":["s3:PutObject","s3:GetObject","s3:DeleteObject"],
+      "Resource":"arn:aws:s3:::REPLACE_BUCKET_NAME/*"
+    },
+    {
+      "Sid":"Queue",
+      "Effect":"Allow",
+      "Action":["sqs:SendMessage","sqs:ReceiveMessage","sqs:DeleteMessage","sqs:GetQueueAttributes"],
+      "Resource":"arn:aws:sqs:ap-south-1:REPLACE_ACCOUNT_ID:cloudflow-jobs"
+    },
+    {
+      "Sid":"CreateCloudWatchGroups",
+      "Effect":"Allow",
+      "Action":["logs:CreateLogGroup"],
+      "Resource":"arn:aws:logs:ap-south-1:REPLACE_ACCOUNT_ID:log-group:/cloudflow/*"
+    },
+    {
+      "Sid":"CreateAndWriteCloudWatchStreams",
+      "Effect":"Allow",
+      "Action":["logs:CreateLogStream","logs:PutLogEvents"],
+      "Resource":"arn:aws:logs:ap-south-1:REPLACE_ACCOUNT_ID:log-group:/cloudflow/*:log-stream:*"
+    },
+    {
+      "Sid":"DescribeCloudWatchStreams",
+      "Effect":"Allow",
+      "Action":["logs:DescribeLogStreams"],
+      "Resource":"arn:aws:logs:ap-south-1:REPLACE_ACCOUNT_ID:log-group:/cloudflow/*"
+    }
+  ]
+}
