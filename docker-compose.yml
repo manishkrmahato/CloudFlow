@@ -20,11 +20,6 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+psycopg://cloudflow:${POSTGRES_PASSWORD:-cloudflow}@db:5432/cloudflow
-      AWS_SHARED_CREDENTIALS_FILE: /aws/credentials
-      AWS_CONFIG_FILE: /aws/config
-      AWS_EC2_METADATA_DISABLED: "true"
-    volumes:
-      - ${USERPROFILE}/.aws:/aws:ro
     depends_on:
       db:
         condition: service_healthy
@@ -36,11 +31,6 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+psycopg://cloudflow:${POSTGRES_PASSWORD:-cloudflow}@db:5432/cloudflow
-      AWS_SHARED_CREDENTIALS_FILE: /aws/credentials
-      AWS_CONFIG_FILE: /aws/config
-      AWS_EC2_METADATA_DISABLED: "true"
-    volumes:
-      - ${USERPROFILE}/.aws:/aws:ro
     depends_on:
       db:
         condition: service_healthy
@@ -55,4 +45,3 @@ services:
 
 volumes:
   postgres_data:
-

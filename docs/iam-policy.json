@@ -1,35 +1,50 @@
 {
-  "Version":"2012-10-17",
-  "Statement":[
+  "Version": "2012-10-17",
+  "Statement": [
     {
-      "Sid":"BucketObjects",
-      "Effect":"Allow",
-      "Action":["s3:PutObject","s3:GetObject","s3:DeleteObject"],
-      "Resource":"arn:aws:s3:::REPLACE_BUCKET_NAME/*"
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1/*"
     },
     {
-      "Sid":"Queue",
-      "Effect":"Allow",
-      "Action":["sqs:SendMessage","sqs:ReceiveMessage","sqs:DeleteMessage","sqs:GetQueueAttributes"],
-      "Resource":"arn:aws:sqs:ap-south-1:REPLACE_ACCOUNT_ID:cloudflow-jobs"
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1/*"
     },
     {
-      "Sid":"CreateCloudWatchGroups",
-      "Effect":"Allow",
-      "Action":["logs:CreateLogGroup"],
-      "Resource":"arn:aws:logs:ap-south-1:REPLACE_ACCOUNT_ID:log-group:/cloudflow/*"
+      "Effect": "Allow",
+      "Action": "s3:DeleteObject",
+      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1/*"
     },
     {
-      "Sid":"CreateAndWriteCloudWatchStreams",
-      "Effect":"Allow",
-      "Action":["logs:CreateLogStream","logs:PutLogEvents"],
-      "Resource":"arn:aws:logs:ap-south-1:REPLACE_ACCOUNT_ID:log-group:/cloudflow/*:log-stream:*"
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1"
     },
     {
-      "Sid":"DescribeCloudWatchStreams",
-      "Effect":"Allow",
-      "Action":["logs:DescribeLogStreams"],
-      "Resource":"arn:aws:logs:ap-south-1:REPLACE_ACCOUNT_ID:log-group:/cloudflow/*"
+      "Effect": "Allow",
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sqs:ReceiveMessage",
+      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sqs:DeleteMessage",
+      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sqs:ChangeMessageVisibility",
+      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sqs:GetQueueAttributes",
+      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
     }
   ]
 }
