@@ -1,13 +1,12 @@
 from functools import lru_cache
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     app_name: str = "CloudFlow"
     environment: str = "development"
     database_url: str = "postgresql+psycopg://cloudflow:cloudflow@localhost:5432/cloudflow"
-    jwt_secret: str = "development-only-change-me"
+    jwt_secret: str = ""
     jwt_expire_minutes: int = 60
     aws_region: str = "ap-south-1"
     aws_profile: str | None = None
@@ -19,17 +18,15 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 10 * 1024 * 1024
     presigned_url_seconds: int = 300
     log_level: str = "INFO"
-
+    @model_validator(mode="after")
+    def validate_security(self):
+        if self.environment == "production" and not self.jwt_secret:
+            raise ValueError("JWT_SECRET must be configured in production")
+        return self
     @property
     def allowed_origins(self) -> list[str]:
         return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
-
-
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-
-
 settings = get_settings()
-
-
