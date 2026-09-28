@@ -1,7 +1,9 @@
 services:
   api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     environment:
-      AWS_PROFILE: ""
       AWS_EC2_METADATA_DISABLED: "false"
     volumes: []
     logging:
@@ -13,8 +15,10 @@ services:
         awslogs-stream: api
 
   worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
     environment:
-      AWS_PROFILE: ""
       AWS_EC2_METADATA_DISABLED: "false"
     volumes: []
     logging:

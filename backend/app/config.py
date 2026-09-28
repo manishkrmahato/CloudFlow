@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "development-only-change-me"
     jwt_expire_minutes: int = 60
     aws_region: str = "ap-south-1"
-    aws_profile: str | None = "default"
+    aws_profile: str | None = None
     aws_s3_bucket: str = ""
     aws_sqs_queue_url: str = ""
     aws_sqs_visibility_timeout: int = 180
