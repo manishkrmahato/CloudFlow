@@ -4,47 +4,47 @@
     {
       "Effect": "Allow",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1/*"
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/*"
     },
     {
       "Effect": "Allow",
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1/*"
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/*"
     },
     {
       "Effect": "Allow",
       "Action": "s3:DeleteObject",
-      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1/*"
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/*"
     },
     {
       "Effect": "Allow",
       "Action": "s3:ListBucket",
-      "Resource": "arn:aws:s3:::cloudflow-media-pipeline-ap-south-1"
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME"
     },
     {
       "Effect": "Allow",
       "Action": "sqs:SendMessage",
-      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+      "Resource": "arn:aws:sqs:ap-south-1:YOUR_AWS_ACCOUNT_ID:YOUR_QUEUE_NAME"
     },
     {
       "Effect": "Allow",
       "Action": "sqs:ReceiveMessage",
-      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+      "Resource": "arn:aws:sqs:ap-south-1:YOUR_AWS_ACCOUNT_ID:YOUR_QUEUE_NAME"
     },
     {
       "Effect": "Allow",
       "Action": "sqs:DeleteMessage",
-      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+      "Resource": "arn:aws:sqs:ap-south-1:YOUR_AWS_ACCOUNT_ID:YOUR_QUEUE_NAME"
     },
     {
       "Effect": "Allow",
       "Action": "sqs:ChangeMessageVisibility",
-      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+      "Resource": "arn:aws:sqs:ap-south-1:YOUR_AWS_ACCOUNT_ID:YOUR_QUEUE_NAME"
     },
     {
       "Effect": "Allow",
       "Action": "sqs:GetQueueAttributes",
-      "Resource": "arn:aws:sqs:ap-south-1:686420703711:cloudflow-image-processing"
+      "Resource": "arn:aws:sqs:ap-south-1:YOUR_AWS_ACCOUNT_ID:YOUR_QUEUE_NAME"
     }
   ]
 }
