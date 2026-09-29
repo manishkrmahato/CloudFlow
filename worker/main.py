@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 import time
@@ -6,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 
-from app.aws import s3, sqs
+from app.aws import s3, sqs, s3_transfer_config
 from app.config import settings
 from app.database import SessionLocal
 from app.models import Job, JobStatus
@@ -64,10 +65,16 @@ def process_message(message: dict) -> bool:
         filename = job.filename
 
     try:
-        source = s3().get_object(
-            Bucket=settings.aws_s3_bucket,
-            Key=input_key,
-        )["Body"].read()
+        source_file = io.BytesIO()
+
+        s3().download_fileobj(
+            settings.aws_s3_bucket,
+            input_key,
+            source_file,
+            Config=s3_transfer_config(),
+        )
+
+        source = source_file.getvalue()
 
         output, extension, content_type = process_image(
             source,
