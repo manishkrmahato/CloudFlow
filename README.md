@@ -158,15 +158,15 @@ Each uploaded image creates an independent processing job. For example, uploadin
 ```mermaid
 flowchart TB
 
-    U[User] --> V["Vercel (React Frontend)"]
-
-    V -->|"HTTPS (/api rewrite)"| P["Reverse Proxy (TLS termination)"]
+    U[User] --> V["Vercel - React Frontend"]
 
     subgraph EC2["AWS EC2"]
-        P --> A[FastAPI API]
+        N["EC2 Nginx"] --> A["FastAPI API"]
         A --> DB[(PostgreSQL)]
         W["Python Worker + Pillow"] --> DB
     end
+
+    V -->|"HTTPS /api/*"| N
 
     A --> S3[(Private Amazon S3)]
     A --> Q[Amazon SQS]
@@ -389,7 +389,7 @@ Vercel (React Frontend)
   v
 AWS EC2
   |
-  +--> Reverse Proxy (HTTPS)
+  +--> Nginx (HTTPS reverse proxy)
   |
   +--> FastAPI
         |
@@ -451,7 +451,7 @@ The FastAPI backend, PostgreSQL database, and image processing worker run on an 
 - IAM: AWS access control
 - PostgreSQL: application database
 
-Vercel CDN routing rewrites frontend `/api/*` requests to the HTTPS-enabled EC2 backend.
+Vercel rewrites frontend `/api/*` requests to the HTTPS-enabled EC2 backend. This allows the browser to use the Vercel frontend origin while API requests are securely forwarded to the AWS backend.
 
 ---
 
@@ -535,10 +535,18 @@ Create a local `.env` file based on `.env.example`. The repository contains only
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `JWT_SECRET` | Secret used to sign JWTs |
+| `JWT_EXPIRE_MINUTES` | JWT expiration time in minutes |
 | `AWS_REGION` | AWS region for S3 and SQS |
-| `S3_BUCKET` | Name of the private S3 bucket |
-| `SQS_QUEUE_URL` | URL of the main SQS queue |
-| `SQS_DLQ_URL` | URL of the Dead Letter Queue |
+| `AWS_PROFILE` | AWS CLI profile used for local development |
+| `AWS_S3_BUCKET` | Name of the private S3 bucket |
+| `AWS_SQS_QUEUE_URL` | URL of the main SQS queue |
+| `AWS_SQS_VISIBILITY_TIMEOUT` | SQS visibility timeout in seconds |
+| `AWS_ENDPOINT_URL` | Optional AWS-compatible endpoint override |
+| `CORS_ORIGINS` | Allowed frontend origins |
+| `MAX_UPLOAD_BYTES` | Maximum upload size in bytes |
+| `PRESIGNED_URL_SECONDS` | Lifetime of generated download URLs |
+| `LOG_LEVEL` | Application logging level |
+| `POSTGRES_PASSWORD` | PostgreSQL password used by Docker Compose |
 
 Never commit a real `.env` file containing secrets.
 
@@ -574,6 +582,8 @@ Start the application:
 ```bash
 docker compose up --build
 ```
+
+Open http://localhost:8080. API health: http://localhost:8080/health.
 
 Check running services:
 
@@ -761,9 +771,11 @@ https://cloud-flow-virid.vercel.app/
 
 Vercel handles the public frontend delivery and rewrites `/api/*` requests to the HTTPS-enabled EC2 backend.
 
-The EC2 backend is exposed through:
+The current EC2 backend endpoint is:
 
 https://16-4-33-105.sslip.io/
+
+The EC2 deployment uses Nginx as the reverse proxy in front of the FastAPI application.
 
 ---
 
