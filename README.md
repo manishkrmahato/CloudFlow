@@ -4,6 +4,8 @@
 
 **Production:** https://cloud-flow-virid.vercel.app/
 
+> CloudFlow is deployed with the React frontend on Vercel and the backend services running on AWS EC2.
+
 CloudFlow is an asynchronous image processing platform built with React, TypeScript, FastAPI, PostgreSQL, Amazon S3, Amazon SQS, Docker, and a Python background worker.
 
 Authenticated users can upload one or multiple images, select an image processing operation, track processing jobs, retry failed jobs, and download completed results.
@@ -25,6 +27,7 @@ The project demonstrates practical concepts in full-stack development, asynchron
 - [Reliability and Failure Handling](#reliability-and-failure-handling)
 - [Security](#security)
 - [AWS Architecture](#aws-architecture)
+- [Production Deployment](#production-deployment)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
@@ -125,7 +128,8 @@ The project demonstrates practical concepts in full-stack development, asynchron
 
 - Docker and Docker Compose
 - GitHub Actions CI
-- AWS EC2 deployment
+- Frontend deployment on Vercel
+- HTTPS-enabled backend on AWS EC2
 - AWS IAM instance role
 - CloudWatch logging
 
@@ -152,26 +156,25 @@ Each uploaded image creates an independent processing job. For example, uploadin
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TB
 
-    U[User] --> F[React Frontend]
+    U[User] --> V["Vercel (React Frontend)"]
 
-    F -->|JWT / HTTP| A[FastAPI API]
+    V -->|"HTTPS (/api rewrite)"| P["Reverse Proxy (TLS termination)"]
 
-    A --> DB[(PostgreSQL)]
+    subgraph EC2["AWS EC2"]
+        P --> A[FastAPI API]
+        A --> DB[(PostgreSQL)]
+        W["Python Worker + Pillow"] --> DB
+    end
+
     A --> S3[(Private Amazon S3)]
     A --> Q[Amazon SQS]
 
-    Q --> W[Python Worker + Pillow]
-
+    Q --> W
     W --> S3
-    W --> DB
 
     Q -. repeated failures .-> DLQ[Dead Letter Queue]
-
-    EC2[Amazon EC2] -. hosts .-> A
-    EC2 -. hosts .-> W
-    EC2 -. hosts .-> DB
 
     EC2 -. logs .-> CW[CloudWatch]
 ```
@@ -187,6 +190,7 @@ flowchart LR
 | Worker | Python, Pillow, Boto3, Amazon SQS |
 | Database | PostgreSQL 16 |
 | AWS | Amazon EC2, Amazon S3, Amazon SQS, SQS Dead Letter Queue, AWS IAM, Amazon CloudWatch |
+| Hosting | Vercel (frontend), Amazon EC2 (backend services) |
 | DevOps | Docker, Docker Compose, Git, GitHub, GitHub Actions |
 | Testing | Pytest, frontend build validation, frontend type validation |
 
@@ -367,42 +371,44 @@ The repository uses `.gitignore` rules to keep sensitive and local-only files ou
 
 ### Network Access
 
-The deployed EC2 instance exposes the application through its configured application port. SSH access is restricted rather than open to the entire internet.
+The EC2 backend is accessed over HTTPS. SSH access is restricted rather than open to the entire internet.
 
 ---
 
 ## AWS Architecture
 
-The current deployment uses Amazon EC2 to host the application containers.
+The backend services run on Amazon EC2, while the frontend is served by Vercel.
 
 ```text
-                    Internet
-                       |
-                       v
-                  Amazon EC2
-                       |
-       +---------------+---------------+
-       |               |               |
-       v               v               v
-   Frontend         FastAPI        PostgreSQL
-                       |
-                +------+------+
-                |             |
-                v             v
-             Amazon S3     Amazon SQS
-                              |
-                              v
-                       Python Worker
-                              |
-                         +----+----+
-                         |         |
-                         v         v
-                        S3     PostgreSQL
-
-Amazon SQS
-    |
-    v
-Dead Letter Queue
+User
+  |
+  v
+Vercel (React Frontend)
+  |
+  | HTTPS (/api rewrite)
+  v
+AWS EC2
+  |
+  +--> Reverse Proxy (HTTPS)
+  |
+  +--> FastAPI
+        |
+        +--> PostgreSQL
+        +--> Amazon S3
+        +--> Amazon SQS
+                    |
+                    +--> Dead Letter Queue (repeated failures)
+                    |
+                    v
+              Python Worker
+                    |
+                    v
+              Pillow Processing
+                    |
+              +-----+-----+
+              |           |
+              v           v
+             S3      PostgreSQL
 ```
 
 CloudWatch can receive container logs from the EC2 environment.
@@ -411,12 +417,41 @@ CloudWatch can receive container logs from the EC2 environment.
 
 | Service | Purpose |
 |---|---|
-| Amazon EC2 | Runs the application containers. The current deployment uses a `t3.micro` instance. |
+| Amazon EC2 | Runs the backend containers. The current deployment uses a `t3.micro` instance. |
 | Amazon S3 | Stores original and processed image objects. |
 | Amazon SQS | Provides asynchronous communication between the API and the worker. |
 | SQS Dead Letter Queue | Stores messages that repeatedly fail processing. |
 | AWS IAM | Provides controlled access to AWS resources through an instance role. |
 | Amazon CloudWatch | Provides centralized logging for the deployed environment. |
+
+---
+
+## Production Deployment
+
+CloudFlow is deployed using a hybrid Vercel and AWS architecture.
+
+### Frontend
+
+The React frontend is deployed on Vercel.
+
+Production URL:
+
+https://cloud-flow-virid.vercel.app/
+
+### Backend
+
+The FastAPI backend, PostgreSQL database, and image processing worker run on an AWS EC2 instance. The EC2 backend is accessed securely over HTTPS.
+
+### AWS Services
+
+- Amazon EC2: application runtime
+- Amazon S3: private image storage
+- Amazon SQS: asynchronous job queue
+- Amazon SQS DLQ: failed job handling
+- IAM: AWS access control
+- PostgreSQL: application database
+
+Vercel CDN routing rewrites frontend `/api/*` requests to the HTTPS-enabled EC2 backend.
 
 ---
 
@@ -689,12 +724,12 @@ The main queue is configured with a Dead Letter Queue. Messages that keep failin
 
 ## EC2 Deployment
 
-The production application is deployed on Ubuntu EC2 using Docker Compose. The production environment runs:
+The backend is deployed on Ubuntu EC2 using Docker Compose. The production backend environment runs:
 
-- Frontend
 - FastAPI API
 - PostgreSQL
 - Python worker
+- HTTPS reverse proxy
 
 The production Compose override is `compose.ec2.yml`.
 
@@ -717,6 +752,18 @@ docker compose -f docker-compose.yml -f compose.ec2.yml logs
 docker compose -f docker-compose.yml -f compose.ec2.yml logs worker
 docker compose -f docker-compose.yml -f compose.ec2.yml logs api
 ```
+
+### Production HTTPS Access
+
+The production frontend is deployed on Vercel:
+
+https://cloud-flow-virid.vercel.app/
+
+Vercel handles the public frontend delivery and rewrites `/api/*` requests to the HTTPS-enabled EC2 backend.
+
+The EC2 backend is exposed through:
+
+https://16-4-33-105.sslip.io/
 
 ---
 
@@ -786,19 +833,17 @@ The current architecture intentionally keeps the infrastructure simple.
 - **Fixed worker capacity:** the worker does not autoscale based on SQS queue depth.
 - **No high availability:** there are no multiple EC2 instances, load balancing, automatic failover, Multi-AZ deployment, or RDS high availability.
 - **Polling-based job updates:** the frontend polls for job status instead of using WebSockets or Server-Sent Events.
-- **HTTP demonstration deployment:** the EC2 deployment uses an HTTP endpoint. HTTPS can be added later with a domain and TLS termination.
 - **No Infrastructure as Code:** AWS resources are not currently managed with Terraform, AWS CDK, or CloudFormation.
 
 ---
 
 ## Future Improvements
 
+- Custom API domain
 - Amazon RDS for PostgreSQL
 - Multiple worker instances
 - Worker autoscaling based on SQS queue depth
-- Application Load Balancer
-- HTTPS and TLS termination
-- Custom API domain
+- AWS Application Load Balancer
 - WebSocket or Server-Sent Events for job updates
 - Improved application metrics
 - Centralized structured logging
@@ -880,7 +925,7 @@ Check AWS pricing before creating additional resources or increasing capacity, a
 | Backend Engineering | API design, request validation, JWT authentication, error handling, HTTP status codes, database persistence, database migrations |
 | Distributed Systems | Asynchronous processing, message queues, at-least-once delivery, idempotency, visibility timeout, retry handling, Dead Letter Queues, failure recovery, eventual job completion |
 | Cloud Computing | Amazon EC2, S3, SQS, IAM, CloudWatch, private object storage, presigned URLs, IAM instance roles |
-| DevOps | Docker, Docker Compose, Git, GitHub, GitHub Actions, environment configuration, CI validation |
+| DevOps | Docker, Docker Compose, Git, GitHub, GitHub Actions, Vercel deployment, HTTPS, environment configuration, CI validation |
 | Image Processing | Pillow, resizing, compression, format conversion, grayscale conversion |
 | Reliability | Duplicate message handling, deterministic output keys, worker failure handling, retry behavior, failed job states, Dead Letter Queue |
 
@@ -948,4 +993,4 @@ The project intentionally focuses on a clear asynchronous architecture rather th
 
 **Manish Mahato**
 
-GitHub: [manishkrmahato](https://github.com/manishkrmahato)
+LinkedIn: [manishmahato](https://www.linkedin.com/in/manishmahato555/)
