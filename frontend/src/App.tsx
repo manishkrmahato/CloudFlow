@@ -117,8 +117,8 @@ export default function App() {
         <section className="panel upload-panel"><div className="section-title"><div><p className="eyebrow">NEW PROCESSING JOB</p><h2>Upload images</h2></div><span className="step">01 <i>/</i> 02</span></div>
           <form onSubmit={upload}>
             <div className={"dropzone "+(dragging?"dragging":"")} onDragOver={(e)=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={(e)=>{e.preventDefault();setDragging(false);choose(e.dataTransfer.files);}}>
-              <input id="file-picker" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(e)=>e.target.files&&choose(e.target.files)}/>
-              <div className="upload-icon">↑</div><strong>Drop your images here</strong><span>or <label htmlFor="file-picker" className="inline-link">browse files</label> from your computer</span><small>JPG, PNG, WebP · Up to 10 MB each</small>
+              <input className="file-picker" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(e)=>e.target.files&&choose(e.target.files)}/>
+              <div className="upload-icon">↑</div><strong>Drop your images here</strong><span>or <span className="inline-link">browse files</span> from your computer</span><small>JPG, PNG, WebP · Up to 10 MB each</small>
               {files.length>0&&<div className="file-summary">{files.length} image(s) selected: {files.map((f)=>f.name).join(", ")}</div>}
             </div>
             <div className="form-row"><label>Operation<select value={operation} onChange={(e)=>setOperation(e.target.value)}>
